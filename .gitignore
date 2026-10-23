@@ -1,0 +1,30 @@
+# 秘密情報(絶対にコミットしない)
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+.env
+.env.*
+*.tfstate
+*.tfstate.*
+secrets/
+ansible/vault_pass*
+ansible/**/secrets.yml
+
+# バックアップファイル
+*.sql
+*.dump
+*.sql.gz
+backups/
+
+# OS・エディタ
+.DS_Store
+Thumbs.db
+.vscode/
+*.swp
+*~
+.*.un~
+
+# Node
+node_modules/
+.next/
