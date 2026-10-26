@@ -17,6 +17,14 @@
 ---
 
 <!-- ここから下に追記 -->
+### 2026-10-26 書き込めなかったユニットファイルに chmod a+rwx してしまった
+- 環境: 手元VM(AlmaLinux 9)
+- 症状: `/etc/systemd/system/hello-app.service` を編集しようとしたら書き込めなかったので、`sudo chmod a+rwx` した
+- 切り分け: `history | grep chmod` で、いつ・どのファイルに何をしたかを特定した
+- 原因: ファイルの持ち主が root だったので、一般ユーザーは読み込みしかできなかった
+- 対処: `sudo chmod 644 /etc/systemd/system/hello-app.service` で元に戻し、`ls -l` で `-rw-r--r-- root root` を確認した
+- 再発防止・学び: 書き込めないと言われたら sudo コマンドを使い書き込む。a+rwx のままだと一般ユーザーに不正アクセスなどされた際に任意のコードを実行できてセキュリティホールになってる、一般ユーザーがrootの権限を取れる状態だった。
+
 ### 2026-10-23 sshd設定を変えたのにパスワードログイン出来てしまう
 - 環境: 手元VM(AlmaLinux 9)
 - 症状: PasswordAuthentication noにしたのに、ssh root@...でパスワードを聞かれた
