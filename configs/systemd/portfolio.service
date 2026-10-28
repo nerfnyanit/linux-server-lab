@@ -1,0 +1,15 @@
+[Unit]
+Description=NEXT_portfolio_web
+After=network.target
+
+[Service]
+User=portfolio
+WorkingDirectory=/opt/portfolio/app
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=3
+Environment=NEXT_TELEMETRY_DISABLED=1
+
+[Install]
+WantedBy=multi-user.target
