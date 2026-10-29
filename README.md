@@ -100,6 +100,7 @@ flowchart LR
 
 - EC2 の更新手順をシェルスクリプトにまとめて自動化する
 - バックエンド(API)と DB を追加して、フルスタックの構成にする
+- Terraform を用いて、AWS の構成(EC2・SG・Elastic IP など)をコードで管理する
 
 
 
