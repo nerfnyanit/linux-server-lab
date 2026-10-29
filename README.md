@@ -81,9 +81,25 @@ flowchart LR
 
 ## 障害対応の経験
 
+- **Nginx のリバースプロキシを設定したら 502 Bad Gateway(EC2)**
+  - `/var/log/nginx/error.log` に `connect() to 127.0.0.1:3000 failed (13: Permission denied)`
+  - `ausearch -m avc` で、SELinux が Nginx(`httpd_t`)から 3000 番ポート(`ntop_port_t`)への TCP 接続(`name_connect`)を拒否していたと特定。Web サーバーが外へ接続することは、既定では許可されていない
+  - SELinux は最小限のことだけを許可するので、boolean で `httpd_can_network_connect` を on にして、Web サーバーのネットワーク接続を許可した
+- **sshd の設定を変えたのに、パスワードでログインできてしまう(VM)**
+  - コマンドの打ち間違い(`reload` → `reroad`)で、設定が反映されていなかった
+  - CLI では何が起きているかわかりにくいので、確認を習慣にする。`systemctl status` で Reloaded の記録を確認し、実際に接続して確かめる
+- **書き込めなかったユニットファイルに `chmod a+rwx` してしまった(VM)**
+  - 最小権限での構築を進めていて、書き込みができないと思って権限を付与してしまった
+  - 一般ユーザーが root の権限を取れる状態は root と同じで、一般ユーザーを作った意味がない。sudo を使わせることに意味がある
+
+詳しい切り分けの記録は [docs/troubleshooting.md](docs/troubleshooting.md) を参照。
+
 ## 再現手順
 
 ## 今後やりたいこと
+
+- EC2 の更新手順をシェルスクリプトにまとめて自動化する
+- バックエンド(API)と DB を追加して、フルスタックの構成にする
 
 
 
