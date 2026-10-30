@@ -18,7 +18,7 @@
         <mxCell id="subnet" value="パブリックサブネット" style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_security_group;grStroke=0;strokeColor=#7AA116;fillColor=#F2F6E8;verticalAlign=top;align=left;spacingLeft=30;fontColor=#248814;dashed=0;html=1;whiteSpace=wrap;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="340" y="160" width="680" height="440" as="geometry" />
         </mxCell>
-        <mxCell id="sg" value="セキュリティグループ(portfolio-web-sg)&lt;br&gt;80 / 443:全体 ・ 22:自宅IPのみ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#DD3522;fontColor=#DD3522;verticalAlign=top;align=left;spacingLeft=10;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="sg" value="セキュリティグループ&lt;br&gt;80 / 443:全体 ・ 22:自宅IPのみ" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#DD3522;fontColor=#DD3522;verticalAlign=top;align=left;spacingLeft=10;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="370" y="200" width="630" height="380" as="geometry" />
         </mxCell>
         <mxCell id="ec2" value="EC2 t3.micro / AlmaLinux 9(SELinux Enforcing)" style="shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_ec2_instance_contents;strokeColor=#D86613;fillColor=#FFFFFF;verticalAlign=top;align=left;spacingLeft=30;fontColor=#D86613;dashed=0;html=1;whiteSpace=wrap;fontSize=12;" vertex="1" parent="1">

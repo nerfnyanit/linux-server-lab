@@ -62,14 +62,14 @@ ssh <user>@<Elastic IP>
 - なぜ 700 / 600 にするか:持ち主(`<user>`)だけが読み書きできるようにするため。他人が `authorized_keys` に自分の鍵を書き足せたら、そのユーザーとしてログインできてしまう。sshd は権限がゆるいと、その鍵を使わせない
 
 ```bash
-# 【手元】sshd の設定ファイルを送る(configs/sshd_config.d/49-uchida.conf。ファイル名は 49- で始まれば何でもよい)
-scp -i ~/.ssh/<キーペア>.pem configs/sshd_config.d/49-uchida.conf ec2-user@<Elastic IP>:/tmp/
+# 【手元】sshd の設定ファイルを送る(configs/sshd_config.d/49-hardening.conf。ファイル名は 49- で始まれば何でもよい)
+scp -i ~/.ssh/<キーペア>.pem configs/sshd_config.d/49-hardening.conf ec2-user@<Elastic IP>:/tmp/
 
 # 【EC2】置いて、ラベルを直し、文法を確認してから reload
-sudo mv /tmp/49-uchida.conf /etc/ssh/sshd_config.d/
-sudo chown root:root /etc/ssh/sshd_config.d/49-uchida.conf
-sudo chmod 600 /etc/ssh/sshd_config.d/49-uchida.conf
-sudo restorecon -v /etc/ssh/sshd_config.d/49-uchida.conf
+sudo mv /tmp/49-hardening.conf /etc/ssh/sshd_config.d/
+sudo chown root:root /etc/ssh/sshd_config.d/49-hardening.conf
+sudo chmod 600 /etc/ssh/sshd_config.d/49-hardening.conf
+sudo restorecon -v /etc/ssh/sshd_config.d/49-hardening.conf
 sudo sshd -t
 sudo systemctl reload sshd
 sudo systemctl status sshd   # Reloaded の記録を確認

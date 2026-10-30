@@ -6,7 +6,7 @@
 - Step:**全 Step 完了(10/30)**
 - 次にやること:11/1 は予備日。任意で fail2ban / dnf-automatic、`poweredByHeader: false`。12/22 までに AWS リソースを削除
 - 締切:**11/1(日)**
-- 費用:**0円**(AWS無料プランのクレジット・無料リソース内、ドメインはDuckDNS)
+- 費用:**自己負担0円**(AWS の利用料はクレジットで充当、ドメインはDuckDNS)
 
 ## Step 1:手元VM(10/22〜10/25)
 - [x] 1-1 VMware + AlmaLinux 9 + 固定IP (10/23)
