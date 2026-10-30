@@ -52,6 +52,7 @@
 - ドメイン:`nerfnyanit-portfolio.duckdns.org` → `54.92.104.136`(DuckDNS の token は秘密情報。リポジトリに書かない)
 - EC2 の Nginx(10/28):`/etc/nginx/conf.d/portfolio.conf`(最初は listen 80・`server_name _`、2-7 でドメインに変更。`proxy_pass http://127.0.0.1:3000`)。nginx.conf の既定の server ブロックはコメントアウト(バックアップ `nginx.conf.bak`)。502 → error.log `(13: Permission denied)` → `ausearch -m avc` で `httpd_t` → `ntop_port_t` の name_connect 拒否 → `setsebool -P httpd_can_network_connect 1` → troubleshooting.md に記録済み
 - EC2 の HTTPS(10/28):`server_name` を `nerfnyanit-portfolio.duckdns.org` に変更 → EPEL + certbot(`certbot --nginx`)。証明書の期限 2027-01-26(90日)、秘密鍵 `/etc/letsencrypt/live/.../privkey.pem` は外に出さない。certbot が 443 ssl と 80→301 の server ブロックを追加(IP 直打ちは 404)。バックアップ `/etc/nginx/portfolio.conf.before-certbot`。80 番のブロックで `nginx/1.20.1` が見えていた → `server_tokens off` を nginx.conf の http ブロックに移した。`certbot-renew.timer` は自動で起動しないので `enable --now`。`renew --dry-run` 成功
+- 10/30 証跡を evidence/ に保存。`ss -tlnp` で rpcbind(111)が待ち受けていたので `systemctl disable --now rpcbind.socket rpcbind.service` で停止・無効化
 - **TODO(開発環境で)**:`next.config.ts` に `poweredByHeader: false`(`X-Powered-By: Next.js` を消す)
 - 10/27 脆弱性対応:`npm audit --omit=dev` で next 16.1.1 に critical(認証不要の RCE など)。開発環境で `npm audit fix`(--force なし)→ next 16.4.3、0 件。PR #6 をマージ、Vercel 本番は更新済み。EC2 にも取り込み済み(16.4.3、`npm audit --omit=dev` で 0 件、10/27)
 - EC2 の設定の控え(10/28):`configs/systemd/portfolio.service`、`configs/nginx/portfolio.conf`、`configs/nginx/nginx.conf`(証明書・秘密鍵は含めない)

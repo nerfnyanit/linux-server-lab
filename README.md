@@ -78,6 +78,7 @@ flowchart LR
   - SELinux は Enforcing のまま運用し、Nginx から Next.js への接続で出た拒否は boolean で許可した(無効化はしていない)
   - DuckDNS のサブドメインを使い、0 円で公開した
   - EPEL + certbot で通信を暗号化(HTTPS)し、証明書は自動更新
+  - 証跡を取るために `ss -tlnp` を実行したところ、AMI に最初から入っていた rpcbind(111 番)が待ち受けていたことに気づいた。SG と firewalld で外からは届かなかったが、使わないサービスなので停止・無効化した([証跡](evidence/02-ec2-checks.txt))
 - **Step 3:壊して直す訓練・まとめ(手元の VM)**
   - 公開サーバーでは試さず、手元の VM でわざと障害を起こし、自力で切り分けて直した。障害は Claude が作ったスクリプトでランダムに 1 つずつ仕込み、どれが仕込まれたかを知らない状態で切り分けた
     - a. Nginx の停止:`systemctl status` で `inactive (dead)` → `journalctl` で正常に停止された時刻を確認して起動
@@ -121,16 +122,18 @@ flowchart LR
 
 ## 動作確認
 
-公開後、次のことを確認した(2026/10/28)。
+公開後(2026/10/28)に確認し、2026/10/30 にもう一度実行して、実際の出力を [evidence/](evidence/) に残した。
 
-| 確認したこと | 方法 | 結果 |
-|---|---|---|
-| HTTPS で表示できる | `curl -I https://nerfnyanit-portfolio.duckdns.org` | `200` |
-| HTTP は HTTPS に転送される | `curl -I http://nerfnyanit-portfolio.duckdns.org` | `301` → `https://` |
-| 3000 番に外から届かない | 手元の PC から `Test-NetConnection <Elastic IP> -Port 3000` | 失敗(届かない) |
-| Nginx のバージョンを出さない | レスポンスヘッダーの `Server:` | `nginx`(番号なし) |
-| 証明書を自動更新できる | `sudo certbot renew --dry-run` | 成功 |
-| 再起動しても元に戻る | `sudo reboot` のあと `systemctl is-active` など | nginx・portfolio・certbot-renew.timer が active、boolean が on、スワップ有効 |
+| 確認したこと | 方法 | 結果 | 証跡 |
+|---|---|---|---|
+| HTTPS で表示できる | 【手元】`curl -I https://nerfnyanit-portfolio.duckdns.org` | `200` | [01](evidence/01-external-checks.txt) |
+| HTTP は HTTPS に転送される | 【手元】`curl -I http://nerfnyanit-portfolio.duckdns.org` | `301` → `https://` | [01](evidence/01-external-checks.txt) |
+| Nginx のバージョンを出さない | 上のレスポンスヘッダーの `Server:` | `nginx`(番号なし) | [01](evidence/01-external-checks.txt) |
+| 3000 番に外から届かない | 【手元】`Test-NetConnection <Elastic IP> -Port 3000` | `TcpTestSucceeded : False` | [01](evidence/01-external-checks.txt) |
+| 3000 番は `127.0.0.1` だけで待ち受け | 【EC2】`sudo ss -tlnp` | `127.0.0.1:3000` | [02](evidence/02-ec2-checks.txt) |
+| SSH は公開鍵以外・root を拒否 | 【EC2】`sudo sshd -T`、【手元】鍵なし・root での `ssh` | 実効値が no、`Permission denied` | [01](evidence/01-external-checks.txt)・[02](evidence/02-ec2-checks.txt) |
+| 証明書を自動更新できる | 【EC2】`sudo certbot renew --dry-run` | `all simulated renewals succeeded` | [02](evidence/02-ec2-checks.txt) |
+| 再起動しても元に戻る | 【EC2】10/28 に `sudo reboot` → `systemctl is-active` など | nginx・portfolio・certbot-renew.timer が active、boolean が on、スワップ有効 | [02](evidence/02-ec2-checks.txt) |
 
 ## 障害対応の経験
 
@@ -156,6 +159,7 @@ flowchart LR
 - レスポンスヘッダーに `X-Powered-By: Next.js` が出ている(`next.config.ts` に `poweredByHeader: false` を入れて再デプロイする予定)
 - HSTS などのセキュリティヘッダーは未設定
 - fail2ban(SSH の総当たり対策)と dnf-automatic(セキュリティ更新の自動適用)は未導入(任意項目)
+- SSH は password と keyboard-interactive を無効にしているが、AlmaLinux 既定の GSSAPI 認証は有効のまま(Kerberos は未設定のため使えないが、厳密には「公開鍵のみ」ではない。`GSSAPIAuthentication no` で無効にできる)
 - `httpd_can_network_connect` は接続先のポートを絞れていない(上の「SELinux を無効にしない」を参照)
 - 冗長化・バックアップ・監視は、今回の範囲外
 

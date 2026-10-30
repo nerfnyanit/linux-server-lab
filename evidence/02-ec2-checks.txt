@@ -1,0 +1,110 @@
+確認日時:2026-10-30 17:25 JST(08:25 GMT)
+対象環境:EC2(本番)。EC2 に SSH でログインして実行
+※ 出力は画面から書き起こしたもの。プロンプトのユーザー名とホスト名(プライベート IP を含む)は伏せている
+
+==================================================
+1. SSH の実効設定(設定ファイルではなく、sshd が実際に使う値)
+==================================================
+$ sudo sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|permitrootlogin|pubkeyauthentication) '
+permitrootlogin no
+pubkeyauthentication yes
+passwordauthentication no
+kbdinteractiveauthentication no
+
+判定:OK(公開鍵のみ yes、パスワード・keyboard-interactive・root ログインは no)
+補足:外から拒否されることは 01-external-checks.txt の 4 で確認済み
+
+==================================================
+2. 待ち受けているポート
+==================================================
+$ sudo ss -tlnp
+State   Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process
+LISTEN  0       4096    0.0.0.0:111         0.0.0.0:*          users:(("rpcbind",pid=664,fd=4),("systemd",pid=1,fd=31))
+LISTEN  0       511     0.0.0.0:80          0.0.0.0:*          users:(("nginx",pid=1173,fd=7),("nginx",pid=1172,fd=7),("nginx",pid=1170,fd=7))
+LISTEN  0       511     127.0.0.1:3000      0.0.0.0:*          users:(("next-server (v1",pid=796,fd=18))
+LISTEN  0       128     0.0.0.0:22          0.0.0.0:*          users:(("sshd",pid=1147,fd=7))
+LISTEN  0       511     0.0.0.0:443         0.0.0.0:*          users:(("nginx",pid=1173,fd=6),("nginx",pid=1172,fd=6),("nginx",pid=1170,fd=6))
+LISTEN  0       4096    [::]:111            [::]:*             users:(("rpcbind",pid=664,fd=6),("systemd",pid=1,fd=34))
+LISTEN  0       128     [::]:22             [::]:*             users:(("sshd",pid=1147,fd=8))
+
+判定:
+- OK:Next.js(next-server)は 127.0.0.1:3000 だけで待ち受けている。外向きは nginx(80 / 443)と sshd(22)
+- 要対応:rpcbind(111)が全体で待ち受けている。AMI に最初から入っていたもので、今回の構成では使わない。
+  SG(22 / 80 / 443 のみ許可)と firewalld(ssh / http / https のみ許可)で外からは届かないが、
+  使わないサービスは止めるべき → 5・6 で停止・無効化した
+
+==================================================
+3. 証明書の自動更新のテスト
+==================================================
+$ sudo certbot renew --dry-run
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/nerfnyanit-portfolio.duckdns.org.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for nerfnyanit-portfolio.duckdns.org
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Congratulations, all simulated renewals succeeded:
+  /etc/letsencrypt/live/nerfnyanit-portfolio.duckdns.org/fullchain.pem (success)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+判定:OK
+
+==================================================
+4. サービスと設定の状態(再起動後)
+==================================================
+$ systemctl is-active nginx portfolio certbot-renew.timer; getsebool httpd_can_network_connect; free -h; uptime
+active
+active
+active
+httpd_can_network_connect --> on
+               total        used        free      shared  buff/cache   available
+Mem:           717Mi       363Mi       150Mi       4.0Mi       306Mi       353Mi
+Swap:          2.0Gi       116Mi       1.9Gi
+ 08:25:48 up 2 days,  2:30,  1 user,  load average: 0.06, 0.01, 0.00
+
+判定:OK
+- nginx・portfolio・certbot-renew.timer がすべて active、boolean は on、スワップ 2G が有効
+- uptime から、最後の再起動は 2026-10-28 の約 06:00 GMT。その再起動(10/28 の完了確認)以降、
+  手で起動し直さずにこの状態を保っている。スワップも実際に使われている(116Mi)
+
+==================================================
+5. firewalld の許可
+==================================================
+$ sudo firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: eth0
+  sources:
+  services: http https ssh
+  ports:
+  protocols:
+  forward: yes
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+
+判定:OK(許可しているのは http / https / ssh だけ。111 番は許可していない)
+
+==================================================
+6. 使わない rpcbind を停止・無効化(2 で見つけたもの)
+==================================================
+$ sudo systemctl disable --now rpcbind.socket rpcbind.service
+Removed "/etc/systemd/system/multi-user.target.wants/rpcbind.service".
+Removed "/etc/systemd/system/sockets.target.wants/rpcbind.socket".
+
+$ sudo ss -tlnp
+State   Recv-Q  Send-Q  Local Address:Port  Peer Address:Port  Process
+LISTEN  0       511     0.0.0.0:80          0.0.0.0:*          users:(("nginx",pid=13063,fd=7),("nginx",pid=13062,fd=7),("nginx",pid=1170,fd=7))
+LISTEN  0       511     127.0.0.1:3000      0.0.0.0:*          users:(("next-server (v1",pid=796,fd=18))
+LISTEN  0       128     0.0.0.0:22          0.0.0.0:*          users:(("sshd",pid=1147,fd=7))
+LISTEN  0       511     0.0.0.0:443         0.0.0.0:*          users:(("nginx",pid=13063,fd=6),("nginx",pid=13062,fd=6),("nginx",pid=1170,fd=6))
+LISTEN  0       128     [::]:22             [::]:*             users:(("sshd",pid=1147,fd=8))
+
+判定:OK(111 番の行が消えた。待ち受けているのは nginx(80 / 443)、sshd(22)、127.0.0.1:3000 の Next.js だけ)
+補足:rpcbind はソケットからも起動されるため、service と socket の両方を無効化した。
+      disable で、再起動しても起動しない

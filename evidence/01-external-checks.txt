@@ -1,0 +1,74 @@
+確認日時:2026-10-30 17:23 JST(08:23 GMT)
+対象環境:EC2(本番)。手元の PC(Windows PowerShell)から実行
+※ 出力は画面から書き起こしたもの。手元の LAN のアドレスは伏せている
+
+==================================================
+1. HTTPS で表示できる
+==================================================
+PS> curl.exe -I https://nerfnyanit-portfolio.duckdns.org
+HTTP/1.1 200 OK
+Server: nginx
+Date: Fri, 30 Oct 2026 08:23:31 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 20474
+Connection: keep-alive
+Vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-nextjs-cache: HIT
+x-nextjs-prerender: 1
+x-nextjs-prerender: 1
+x-nextjs-stale-time: 300
+X-Powered-By: Next.js
+Cache-Control: s-maxage=31536000
+ETag: "byuk03cvkifde"
+
+判定:OK(200)。Server は "nginx" のみでバージョン番号なし(server_tokens off)
+未解決:X-Powered-By: Next.js が出ている(README「できなかったこと・未解決」に記載)
+
+==================================================
+2. HTTP は HTTPS に転送される
+==================================================
+PS> curl.exe -I http://nerfnyanit-portfolio.duckdns.org
+HTTP/1.1 301 Moved Permanently
+Server: nginx
+Date: Fri, 30 Oct 2026 08:23:42 GMT
+Content-Type: text/html
+Content-Length: 162
+Connection: keep-alive
+Location: https://nerfnyanit-portfolio.duckdns.org/
+
+判定:OK(301 で https:// に転送)
+
+==================================================
+3. 3000 番に外から届かない
+==================================================
+PS> Test-NetConnection 54.92.104.136 -Port 3000
+警告: TCP connect to (54.92.104.136 : 3000) failed
+警告: Ping to 54.92.104.136 failed with status: TimedOut
+
+ComputerName           : 54.92.104.136
+RemoteAddress          : 54.92.104.136
+RemotePort             : 3000
+InterfaceAlias         : イーサネット
+SourceAddress          : (手元の LAN のアドレス・伏せ字)
+PingSucceeded          : False
+PingReplyDetails (RTT) : 0 ms
+TcpTestSucceeded       : False
+
+判定:OK(TcpTestSucceeded : False)
+補足:Ping の失敗は、SG で ICMP を許可していないため(想定どおり)
+
+==================================================
+4. SSH は鍵認証以外を受け付けない / root ではログインできない
+==================================================
+PS> ssh -o PubkeyAuthentication=no -o PreferredAuthentications=password,keyboard-interactive <user>@54.92.104.136
+<user>@54.92.104.136: Permission denied (publickey,gssapi-keyex,gssapi-with-mic).
+
+PS> ssh root@54.92.104.136
+root@54.92.104.136: Permission denied (publickey,gssapi-keyex,gssapi-with-mic).
+
+判定:OK
+- サーバーが提示する認証方式は publickey と gssapi のみ。password と keyboard-interactive は提示されない
+- root は鍵を持っていても拒否される(PermitRootLogin no)
+- gssapi は AlmaLinux の既定で有効。Kerberos は設定していないため使えないが、
+  厳密には「publickey のみ」ではない(README「できなかったこと・未解決」に記載)
+- ユーザー名は <user> に伏せている
