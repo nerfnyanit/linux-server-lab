@@ -40,15 +40,14 @@
 - [ ] 12/22より前にAWSリソースを削除(またはOracle Always Freeへ移行)
 
 ## メモ
-- VM:`192.168.99.100/24`(VMnet8 NAT、GW/DNS `192.168.99.2`、DHCP範囲 `.128〜.254`)、メモリ 2GB。再起動後も固定IPが残ることを確認済み
-- VMのファイルは E ドライブ(20GB)。設定は `E:\VM_AlmaLinux`、ディスクは `E:\LinuxVM`(**消さない**)。空きが 3GB を切ったら VM を D に移す
-- VMのユーザー:`uchida`(uid 1001、wheel)を普段使いにする。`admin`(インストーラーで作成、wheel)も残っている
-- sshd の設定は `/etc/ssh/sshd_config.d/49-uchida.conf`(50-redhat.conf より先に読ませるため)。控えを `configs/` に置く。EC2 では cloud-init の `50-cloud-init.conf` にも注意
+- VM:VMnet8(NAT)のサブネット内で、DHCP の範囲外に固定 IP を設定、メモリ 2GB。再起動後も固定IPが残ることを確認済み
+- VMのユーザー:普段使いの一般ユーザー(wheel)を作成して使う
+- sshd の設定は `/etc/ssh/sshd_config.d/49-*.conf`(50-redhat.conf より先に読ませるため)。控えを `configs/` に置く。EC2 では cloud-init の `50-cloud-init.conf` にも注意
 - Nginx のバージョン表示を隠す `server_tokens off;`(nginx.conf の http ブロック)は VM で設定済み(10/26)。EC2(2-5)でも同じ設定を入れる
 - 自作アプリ:`/opt/hello-app/server.js`(127.0.0.1:3000、root 所有で 644)、ユニット `/etc/systemd/system/hello-app.service`(`User=hello`、システムユーザー uid 995、`Restart=always`)
-- EC2:`portfolio-web`(t3.micro、AlmaLinux 9.8 Marketplace 公式 AMI、EBS 20GiB gp3)、Elastic IP `54.92.104.136`(`portfolio-web-eip`)、プライベート IP `172.31.5.75`、SG `portfolio-web-sg`(22=自宅IPのみ / 80・443=全体)、キーペア `portfolio-key`(`~/.ssh/portfolio-key.pem`)。初期ユーザー `ec2-user`
-- EC2 初期設定(10/27):`dnf update` → 再起動、`uchida`(wheel、鍵は `id_ed25519`)、`49-uchida.conf`(configs の控えを scp)、firewalld を追加インストールし起動前に `firewall-offline-cmd` で ssh/http/https を許可。cloud-init の `50-cloud-init.conf` は元から PasswordAuthentication no。メモリ 717Mi・スワップ無し → 2-4 の前にスワップを作る
-- 12/22 までに削除するもの:EC2 → Elastic IP(解放)→ EBS → SG → キーペア(`portfolio-web` で検索)
+- EC2:t3.micro、AlmaLinux 9.8 Marketplace 公式 AMI、EBS 20GiB gp3、Elastic IP、SG(22=自宅IPのみ / 80・443=全体)、キーペアは手元の `~/.ssh/` に保管。初期ユーザー `ec2-user`
+- EC2 初期設定(10/27):`dnf update` → 再起動、普段使いの一般ユーザー(wheel、ed25519 の鍵)、sshd の設定(configs の控えを scp)、firewalld を追加インストールし起動前に `firewall-offline-cmd` で ssh/http/https を許可。cloud-init の `50-cloud-init.conf` は元から PasswordAuthentication no。メモリ 717Mi・スワップ無し → 2-4 の前にスワップを作る
+- 12/22 までに削除するもの:EC2 → Elastic IP(解放)→ EBS → SG → キーペア
 - EC2 の Next.js(10/27):スワップ 2G(`/swapfile`、`swapfile_t`、fstab 追記)、Node.js 24、システムユーザー `portfolio`(ホーム `/opt/portfolio`)、アプリ `/opt/portfolio/app`(`npm ci` → `npm run build`)、ユニット `/etc/systemd/system/portfolio.service`(`-H 127.0.0.1 -p 3000`、`NODE_ENV=production`、`NEXT_TELEMETRY_DISABLED=1`)
 - ドメイン:`nerfnyanit-portfolio.duckdns.org` → `54.92.104.136`(DuckDNS の token は秘密情報。リポジトリに書かない)
 - EC2 の Nginx(10/28):`/etc/nginx/conf.d/portfolio.conf`(最初は listen 80・`server_name _`、2-7 でドメインに変更。`proxy_pass http://127.0.0.1:3000`)。nginx.conf の既定の server ブロックはコメントアウト(バックアップ `nginx.conf.bak`)。502 → error.log `(13: Permission denied)` → `ausearch -m avc` で `httpd_t` → `ntop_port_t` の name_connect 拒否 → `setsebool -P httpd_can_network_connect 1` → troubleshooting.md に記録済み
@@ -56,7 +55,7 @@
 - **TODO(開発環境で)**:`next.config.ts` に `poweredByHeader: false`(`X-Powered-By: Next.js` を消す)
 - 10/27 脆弱性対応:`npm audit --omit=dev` で next 16.1.1 に critical(認証不要の RCE など)。開発環境で `npm audit fix`(--force なし)→ next 16.4.3、0 件。PR #6 をマージ、Vercel 本番は更新済み。EC2 にも取り込み済み(16.4.3、`npm audit --omit=dev` で 0 件、10/27)
 - EC2 の設定の控え(10/28):`configs/systemd/portfolio.service`、`configs/nginx/portfolio.conf`、`configs/nginx/nginx.conf`(証明書・秘密鍵は含めない)
-- ポートフォリオ:`nerfnyanit/frontend-portfolio`(public、ローカルは `E:\frontend-portfolio`)。Next.js 16 / React 19。開いている PR は無し、main に最新がマージ済み(10/27 確認)
+- ポートフォリオ:`nerfnyanit/frontend-portfolio`(public)。Next.js 16 / React 19。開いている PR は無し、main に最新がマージ済み(10/27 確認)
 - AWS 予算 `monthly-10usd`(名前は変更不可):10/27 に **月 $20** に変更(EC2+EBS+IPv4 で月 約 $15 かかるため)。請求タイプ Credit を除外(実使用額で判定)、実際のコスト 80% / 100% でメール通知。EBS と Elastic IP は EC2 を停止しても課金される
 - 10/26 ユニットファイルに `chmod a+rwx` してしまった件 → troubleshooting.md に記録済み
 - 10/23 `systemctl reroad` の打ち間違いで reload されず、パスワード認証が有効なままだった → troubleshooting.md に記録する(学び:`sshd -T` はファイルの値で、動いているプロセスの値ではない)
