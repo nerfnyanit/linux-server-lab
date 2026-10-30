@@ -29,8 +29,8 @@
 - [x] 完了条件 1〜5 確認(再起動後も nginx / portfolio / certbot-renew.timer が active、boolean on、スワップ有効) (10/28)
 
 ## Step 3:壊して直す・まとめ(10/30〜11/1)
-- [ ] 3-1 壊して直す訓練 a / b / c / d / e(準備:VM の `/app/` → hello-app で 502 → boolean で解決 10/29。b 済 10/29)
-- [ ] 3-2 切り分けコマンド
+- [x] 3-1 壊して直す訓練 a / b / c / d / e (10/30)(準備:VM の `/app/` → hello-app で 502 → boolean で解決 10/29。b 10/29、a・c・d・e 10/30。c はスクリプトの不具合で1回やり直し)
+- [x] 3-2 切り分けコマンド (10/30)
 - [ ] 3-3 runbook `deploy.md`
 - [ ] 3-4 README.md
 - [ ] (任意)fail2ban / dnf-automatic

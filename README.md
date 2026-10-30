@@ -96,6 +96,8 @@ flowchart LR
 
 ## 再現手順
 
+ゼロから EC2 で公開するまでの手順は [docs/runbooks/deploy.md](docs/runbooks/deploy.md) を参照。
+
 ## 今後やりたいこと
 
 - EC2 の更新手順をシェルスクリプトにまとめて自動化する

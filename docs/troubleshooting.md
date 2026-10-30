@@ -17,6 +17,80 @@
 ---
 
 <!-- ここから下に追記 -->
+### 2026-10-30 【訓練e】VM の /app/ で 502 Bad Gateway
+- 環境: 手元VM(AlmaLinux 9)
+- 症状: `curl -I http://127.0.0.1/app/` が `502 Bad Gateway`。`error.log` に `connect() to 127.0.0.1:3000 failed (13: Permission denied)`。ファイルではなく接続が拒否されている
+- 切り分け: `systemctl status nginx`(active)→ `curl -I` で `/` は 200、`/app/` は 502 → `sudo cat /var/log/nginx/error.log` → 502 の直後に `sudo ausearch -m avc -ts recent` で `denied { name_connect }` を確認
+- 原因: SELinux が、nginx(`httpd_t`)から 3000 番ポート(`ntop_port_t`)への TCP 接続(`name_connect`)を拒否した(`httpd_can_network_connect` が off になっていた)
+- 対処:
+    - `sudo setsebool -P httpd_can_network_connect on` で許可
+    - `getsebool httpd_can_network_connect` で on を確認
+    - 502 が出ていたのと同じ `curl -I .../app/` で 200 を確認
+- 学び:
+    - 前日(訓練準備)のつまずきを活かし、502 の直後に `ausearch` して一度で見つけられた
+    - 同じ 502 でも、error.log の数字で見分けられる。`111: Connection refused` はアプリが待ち受けていない(訓練d)、`13: Permission denied` は接続を止められている(SELinux)
+    - `getsebool` に `-P` は付けられない(`-P` は `setsebool` で変えるときだけ)
+
+### 2026-10-30 【訓練a】nginx が停止していた
+- 環境: 手元VM(AlmaLinux 9)
+- 症状: Web サイト(`/` も `/app/` も)が表示されない。nginx が止まっていた
+- 切り分け:
+    - `systemctl status nginx` で状況を確認 → `inactive (dead)` になっていた
+    - `sudo journalctl -u nginx` で止まった時刻を確認 → 15:09:48 に `Deactivated successfully`(正常に停止)。そのあと Starting が無い
+- 原因: 誰かが意図的に nginx を止めていた(`systemctl stop`)
+- 対処: `sudo systemctl start nginx` → `active (running)` とサイトの表示を確認(止まっていたのは約 6 分)
+- 再発防止・学び:
+    - `dead` は意図的に止められた、`failed` はエラーなどが起きた
+    - 誰が止めたかは、journalctl で止まった時刻を調べ、その時刻に sudo を使ったユーザーを `/var/log/secure` で特定する
+
+### 2026-10-30 【訓練c】nginx が設定ミスで起動できない
+- 環境: 手元VM(AlmaLinux 9)
+- 症状: サイト(`/` も `/app/` も)にアクセスしても何も表示されない。`systemctl status nginx` が `failed`
+- 切り分け:
+    - `systemctl status hello-app` と `systemctl status nginx` で、動いているかをまず確認 → nginx が落ちていた
+    - `sudo nginx -t` で設定を確認 → `[emerg] unknown directive "listne" in /etc/nginx/nginx.conf:40`
+- 原因: nginx.conf の 40 行目に、`listen` のスペルミス(`listne`)があり、restart で起動できなくなった
+- 対処: `sudo vi /etc/nginx/nginx.conf` で 40 行目を直す → `sudo nginx -t` で successful → `sudo systemctl start nginx`(止まっているので reload ではなく start)
+- 再発防止・学び:
+    - nginx の設定ファイルを直しただけでは、Web サイトは立ち上がらない。サービスが起動しているかを再確認し、接続する人と同じ立場から接続して確認する
+    - `nginx -t` は、ファイル名と行番号まで教えてくれる
+
+### 2026-10-30 【訓練d】 /app/ だけ nginx のエラーページ(502)
+- 環境: 手元VM(AlmaLinux 9)
+- 症状: Windows のブラウザで `/` は表示されるが、`/app/` だけ nginx のエラーページ(502)。nginx は active。hello-app は `activating (auto-restart)` を繰り返し、`curl 127.0.0.1:3000` は `Connection refused`
+- 切り分け:
+    - まずサービスが動いているか確認(`systemctl status hello-app`)
+    - ユニットファイルを確認しに行く(`cat /etc/systemd/system/hello-app.service`)→ 設定は変わっていない
+    - ログを確認(`journalctl -u hello-app -n 20`)→ `Error: EACCES: permission denied, open '/opt/hello-app/server.js'`
+    - 権限を確認(`ls -l /opt/hello-app/server.js`)→ `-rw------- root root`
+- 原因: `server.js` が 600(root だけ読める)になっていて、`User=hello` で動く node がファイルを開けずに、起動してはすぐ落ちていた
+- 対処: `sudo chmod 644 /opt/hello-app/server.js`(全員が読める、書けるのは root のみ。元の状態に戻した)。`Restart=always` で自動的に立ち上がり、`active (running)` を確認
+- 再発防止・学び: きれいにコマンドを使い分けて、原因を切り分けられるようになってきた。nginx とサービス(hello-app)の関係性を学んだ
+
+### 2026-10-29 【訓練b】ブラウザでタイムアウト
+- 環境: 手元VM(AlmaLinux 9)
+- 症状: Windows のブラウザで / も /app/ もタイムアウト。SSH(22番)は普通につながる
+- 原因: firewalld の services から http が消えていて、80番宛てのパケットが黙って捨てられていた
+- 対処: `sudo firewall-cmd --permanent --add-service=http` → `sudo firewall-cmd --reload`。`--list-all` で `services: http ssh` を確認し、ブラウザで表示を確認
+- 学び:
+    - タイムアウトは「途中で黙って捨てられている」サイン。22番は通るのに80番だけダメなら、ポート単位で止める層(firewalld)を疑う
+    - `--permanent` は設定ファイルに書くだけで、`--reload` しないと反映されない。今回は reboot で反映したが、本番ではサービスが止まるので reload を使う
+    - 直すときは元の状態に戻すだけにする。https まで足してしまい、あとで外した
+    - firewalld の設定は、見るだけでも sudo が必要
+
+### 2026-10-29 【訓練準備】VM の /app/ で 502 Bad Gateway
+- 環境: 手元VM(AlmaLinux 9)
+- 症状: `curl -I http://127.0.0.1/app/` が `502 Bad Gateway`。`error.log` に `connect() to 127.0.0.1:3000 failed (13: Permission denied)`。ファイルではなく接続が拒否されている
+- 原因: SELinux が、nginx(`httpd_t`)から 3000 番ポート(`ntop_port_t`)への TCP 接続(`name_connect`)を拒否した
+- 対処:
+    - boolean の名前を確認(`getsebool -a | grep httpd`)
+    - `sudo setsebool -P httpd_can_network_connect on` で許可
+    - 502 が出ていたのと同じ `curl -I http://127.0.0.1/app/` で 200 を確認
+- 学び:
+    - 直ったかどうかを、最初は `curl http://127.0.0.1`(静的ページ)で確認してしまった。確認は、502 が出ていたのと同じ `/app/` で行う
+    - `getsebool` は見るだけ(sudo 不要)。`setsebool` は設定を変える(sudo 必要)
+    - nginx を再起動しても 502 は消えず、`ausearch` にも記録が出なかった(誰も 3000 番に接続しないため)。`curl` で 502 を起こし直してから `ausearch` すると記録が出た
+
 ### 2026-10-28 Nginx のリバースプロキシを設定したら 502 Bad Gateway
 - 環境: EC2(AlmaLinux 9、SELinux Enforcing)
 - 症状: Nginx 経由で `curl` すると `502 Bad Gateway`。`/var/log/nginx/error.log` に `connect() to 127.0.0.1:3000 failed (13: Permission denied)`
