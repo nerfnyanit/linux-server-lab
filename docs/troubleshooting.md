@@ -1,6 +1,6 @@
 # 障害・エラー記録
 
-起きたエラーや障害は、解決したら必ずここに追記する。新しいものを上に書く。
+起きたエラーや障害は、解決したら必ずここに追記する。「訓練」と「実際に起きた障害」に分け、それぞれ新しいものを上に書く。
 
 ## 書式
 
@@ -17,6 +17,9 @@
 ---
 
 <!-- ここから下に追記 -->
+
+## 障害対応の訓練(Step 3、手元の VM でわざと起こしたもの)
+
 ### 2026-10-30 【訓練e】VM の /app/ で 502 Bad Gateway
 - 環境: 手元VM(AlmaLinux 9)
 - 症状: `curl -I http://127.0.0.1/app/` が `502 Bad Gateway`。`error.log` に `connect() to 127.0.0.1:3000 failed (13: Permission denied)`。ファイルではなく接続が拒否されている
@@ -27,9 +30,9 @@
     - `getsebool httpd_can_network_connect` で on を確認
     - 502 が出ていたのと同じ `curl -I .../app/` で 200 を確認
 - 学び:
-    - 前日(訓練準備)のつまずきを活かし、502 の直後に `ausearch` して一度で見つけられた
+    - 前日(10/29)、訓練の準備で VM に `/app/` の中継を足したときにも同じ 502 が起きていた。そのときは nginx を再起動してから `ausearch` して記録が出ず(誰も 3000 番に接続しないため)、確認も `/`(静的ページ)でしてしまった。今回はそのつまずきを活かし、502 の直後に `ausearch` して一度で見つけ、`/app/` で 200 を確認した
     - 同じ 502 でも、error.log の数字で見分けられる。`111: Connection refused` はアプリが待ち受けていない(訓練d)、`13: Permission denied` は接続を止められている(SELinux)
-    - `getsebool` に `-P` は付けられない(`-P` は `setsebool` で変えるときだけ)
+    - `getsebool` は見るだけ(sudo 不要、`-P` は付けられない)。`setsebool` は設定を変える(sudo 必要)。boolean の名前は `getsebool -a | grep httpd` で探せる
 
 ### 2026-10-30 【訓練a】nginx が停止していた
 - 環境: 手元VM(AlmaLinux 9)
@@ -78,18 +81,7 @@
     - 直すときは元の状態に戻すだけにする。https まで足してしまい、あとで外した
     - firewalld の設定は、見るだけでも sudo が必要
 
-### 2026-10-29 【訓練準備】VM の /app/ で 502 Bad Gateway
-- 環境: 手元VM(AlmaLinux 9)
-- 症状: `curl -I http://127.0.0.1/app/` が `502 Bad Gateway`。`error.log` に `connect() to 127.0.0.1:3000 failed (13: Permission denied)`。ファイルではなく接続が拒否されている
-- 原因: SELinux が、nginx(`httpd_t`)から 3000 番ポート(`ntop_port_t`)への TCP 接続(`name_connect`)を拒否した
-- 対処:
-    - boolean の名前を確認(`getsebool -a | grep httpd`)
-    - `sudo setsebool -P httpd_can_network_connect on` で許可
-    - 502 が出ていたのと同じ `curl -I http://127.0.0.1/app/` で 200 を確認
-- 学び:
-    - 直ったかどうかを、最初は `curl http://127.0.0.1`(静的ページ)で確認してしまった。確認は、502 が出ていたのと同じ `/app/` で行う
-    - `getsebool` は見るだけ(sudo 不要)。`setsebool` は設定を変える(sudo 必要)
-    - nginx を再起動しても 502 は消えず、`ausearch` にも記録が出なかった(誰も 3000 番に接続しないため)。`curl` で 502 を起こし直してから `ausearch` すると記録が出た
+## 実際に起きた障害
 
 ### 2026-10-28 Nginx のリバースプロキシを設定したら 502 Bad Gateway
 - 環境: EC2(AlmaLinux 9、SELinux Enforcing)
