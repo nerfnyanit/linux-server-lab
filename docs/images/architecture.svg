@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1260 860" width="1260" height="860" font-family="'Noto Sans JP','Hiragino Sans','Meiryo',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#232F3E"/>
+    </marker>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#666"/>
+    </marker>
+  </defs>
+
+  <rect width="1260" height="860" fill="#FFFFFF"/>
+
+  <!-- AWS Cloud -->
+  <rect x="220" y="40" width="860" height="620" fill="none" stroke="#232F3E" stroke-width="1.5"/>
+  <rect x="220" y="40" width="24" height="24" fill="#232F3E"/>
+  <text x="232" y="56" font-size="8" font-weight="bold" fill="#FFF" text-anchor="middle">AWS</text>
+  <text x="252" y="57" font-size="13" fill="#232F3E">AWS Cloud</text>
+  <text x="1068" y="58" font-size="12" fill="#232F3E" text-anchor="end">Budgets(月 $20 でアラート)・ルートユーザー MFA</text>
+
+  <!-- Region -->
+  <rect x="240" y="80" width="820" height="560" fill="none" stroke="#00A4A6" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="250" y="98" font-size="13" fill="#147EBA">東京リージョン(ap-northeast-1)</text>
+
+  <!-- VPC -->
+  <rect x="280" y="120" width="760" height="500" fill="none" stroke="#8C4FFF" stroke-width="1.5"/>
+  <text x="290" y="138" font-size="13" fill="#8C4FFF">VPC(デフォルト)</text>
+
+  <!-- Public subnet -->
+  <rect x="340" y="160" width="680" height="440" fill="#F2F6E8" stroke="#7AA116" stroke-width="1.5"/>
+  <text x="350" y="178" font-size="13" fill="#248814">パブリックサブネット</text>
+
+  <!-- Security group -->
+  <rect x="370" y="200" width="630" height="380" fill="none" stroke="#DD3522" stroke-width="1.5"/>
+  <text x="380" y="218" font-size="13" fill="#DD3522">セキュリティグループ(portfolio-web-sg)</text>
+  <text x="380" y="236" font-size="12" fill="#DD3522">80 / 443:全体 ・ 22:自宅 IP のみ</text>
+
+  <!-- EC2 -->
+  <rect x="400" y="270" width="580" height="290" fill="#FFFFFF" stroke="#D86613" stroke-width="1.5"/>
+  <rect x="400" y="270" width="24" height="24" fill="#ED7100"/>
+  <rect x="406" y="276" width="12" height="12" fill="none" stroke="#FFF" stroke-width="1.5"/>
+  <text x="432" y="287" font-size="13" fill="#D86613">EC2 t3.micro / AlmaLinux 9(SELinux Enforcing)</text>
+
+  <!-- Elastic IP -->
+  <rect x="930" y="250" width="38" height="38" rx="4" fill="#ED7100"/>
+  <text x="949" y="274" font-size="12" font-weight="bold" fill="#FFF" text-anchor="middle">IP</text>
+  <text x="922" y="266" font-size="12" fill="#D86613" text-anchor="end">Elastic IP</text>
+
+  <!-- Internet Gateway -->
+  <rect x="256" y="366" width="48" height="48" rx="6" fill="#8C4FFF"/>
+  <path d="M268,402 v-14 a12,12 0 0 1 24,0 v14" fill="none" stroke="#FFF" stroke-width="3"/>
+  <text x="280" y="430" font-size="11" fill="#232F3E" text-anchor="middle">Internet</text>
+  <text x="280" y="444" font-size="11" fill="#232F3E" text-anchor="middle">Gateway</text>
+
+  <!-- EC2 の中 -->
+  <rect x="430" y="350" width="120" height="70" rx="8" fill="#FFF2CC" stroke="#D6B656"/>
+  <text x="490" y="380" font-size="14" font-weight="bold" fill="#232F3E" text-anchor="middle">firewalld</text>
+  <text x="490" y="400" font-size="12" fill="#232F3E" text-anchor="middle">ssh / http / https</text>
+
+  <rect x="590" y="345" width="140" height="80" rx="8" fill="#D5E8D4" stroke="#82B366"/>
+  <text x="660" y="371" font-size="14" font-weight="bold" fill="#232F3E" text-anchor="middle">Nginx</text>
+  <text x="660" y="390" font-size="12" fill="#232F3E" text-anchor="middle">443:HTTPS 終端</text>
+  <text x="660" y="407" font-size="12" fill="#232F3E" text-anchor="middle">80:301 で HTTPS へ</text>
+
+  <rect x="820" y="345" width="140" height="80" rx="8" fill="#DAE8FC" stroke="#6C8EBF"/>
+  <text x="890" y="371" font-size="14" font-weight="bold" fill="#232F3E" text-anchor="middle">Next.js</text>
+  <text x="890" y="390" font-size="12" fill="#232F3E" text-anchor="middle">127.0.0.1:3000</text>
+  <text x="890" y="407" font-size="12" fill="#232F3E" text-anchor="middle">systemd で常駐</text>
+
+  <rect x="590" y="470" width="140" height="60" rx="8" fill="#F5F5F5" stroke="#666"/>
+  <text x="660" y="495" font-size="13" font-weight="bold" fill="#232F3E" text-anchor="middle">certbot-renew.timer</text>
+  <text x="660" y="514" font-size="12" fill="#232F3E" text-anchor="middle">証明書の自動更新</text>
+
+  <!-- AWS の外 -->
+  <circle cx="80" cy="366" r="10" fill="#232F3D"/>
+  <path d="M62,404 a18,18 0 0 1 36,0 z" fill="#232F3D"/>
+  <circle cx="102" cy="370" r="9" fill="#232F3D" opacity="0.7"/>
+  <path d="M88,404 a14,16 0 0 1 30,0 z" fill="#232F3D" opacity="0.7"/>
+  <text x="90" y="426" font-size="12" fill="#232F3E" text-anchor="middle">ユーザー(ブラウザ)</text>
+
+  <rect x="30" y="160" width="140" height="70" rx="8" fill="#FFF" stroke="#666"/>
+  <text x="100" y="186" font-size="14" font-weight="bold" fill="#232F3E" text-anchor="middle">DuckDNS</text>
+  <text x="100" y="204" font-size="11" fill="#232F3E" text-anchor="middle">nerfnyanit-portfolio</text>
+  <text x="100" y="219" font-size="11" fill="#232F3E" text-anchor="middle">.duckdns.org</text>
+
+  <rect x="1110" y="470" width="130" height="60" rx="8" fill="#FFF" stroke="#666"/>
+  <text x="1175" y="505" font-size="14" font-weight="bold" fill="#232F3E" text-anchor="middle">Let's Encrypt</text>
+
+  <rect x="66" y="716" width="50" height="34" rx="3" fill="#232F3D"/>
+  <rect x="71" y="721" width="40" height="24" fill="#FFF"/>
+  <rect x="84" y="750" width="14" height="8" fill="#232F3D"/>
+  <rect x="74" y="758" width="34" height="4" fill="#232F3D"/>
+  <text x="91" y="780" font-size="12" fill="#232F3E" text-anchor="middle">開発者(手元 PC)</text>
+
+  <rect x="820" y="710" width="140" height="60" rx="8" fill="#FFF" stroke="#666"/>
+  <text x="890" y="735" font-size="14" font-weight="bold" fill="#232F3E" text-anchor="middle">GitHub</text>
+  <text x="890" y="754" font-size="12" fill="#232F3E" text-anchor="middle">frontend-portfolio</text>
+
+  <!-- 線:ユーザーの通信(太線) -->
+  <line x1="120" y1="390" x2="252" y2="390" stroke="#232F3E" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="186" y="382" font-size="12" fill="#232F3E" text-anchor="middle">HTTPS(443)</text>
+  <line x1="304" y1="390" x2="426" y2="388" stroke="#232F3E" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="550" y1="385" x2="586" y2="385" stroke="#232F3E" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="730" y1="385" x2="816" y2="385" stroke="#232F3E" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="775" y="318" font-size="11" fill="#232F3E" text-anchor="middle">リバースプロキシ</text>
+  <text x="775" y="333" font-size="10" fill="#B0084D" text-anchor="middle">SELinux:httpd_can_network_connect</text>
+
+  <!-- 線:名前解決・証明書・開発(点線) -->
+  <line x1="92" y1="352" x2="98" y2="234" stroke="#666" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow-gray)"/>
+  <text x="104" y="296" font-size="12" fill="#666">名前解決</text>
+
+  <line x1="730" y1="500" x2="1106" y2="500" stroke="#666" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow-gray)"/>
+  <text x="790" y="492" font-size="12" fill="#666">HTTP-01 認証</text>
+
+  <polyline points="116,733 490,733 490,424" fill="none" stroke="#666" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow-gray)"/>
+  <text x="140" y="725" font-size="12" fill="#666">SSH 22(鍵認証のみ・自宅 IP から)</text>
+
+  <polyline points="91,786 91,820 890,820 890,774" fill="none" stroke="#666" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow-gray)"/>
+  <text x="490" y="814" font-size="12" fill="#666" text-anchor="middle">git push</text>
+
+  <line x1="890" y1="706" x2="890" y2="429" stroke="#666" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow-gray)"/>
+  <text x="898" y="690" font-size="12" fill="#666">git pull → npm run build</text>
+</svg>

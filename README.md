@@ -1,5 +1,11 @@
 # Linux Server Lab
 
+## ハイライト
+
+- **多層防御**:SG・firewalld・SELinux に加えて、Next.js を `127.0.0.1` だけで待ち受けさせ、外の入口を Nginx だけにした(3000 番に外から届かないことを確認済み)
+- **SELinux を切らずに解決**:リバースプロキシで出た 502 を、`error.log` と `ausearch` で SELinux の拒否と特定し、boolean で必要な接続だけを許可した
+- **障害対応の訓練**:Nginx 停止・firewalld・設定ミス・アプリ停止・SELinux の 5 つの障害をわざと起こし、自力で切り分けて直し、すべて記録した([docs/troubleshooting.md](docs/troubleshooting.md))
+
 ## 概要
 
 LinuC Level 1 と AWS CLF を取得したので、AWS を用いた Web サーバーのポートフォリオを作成しました。
@@ -9,6 +15,11 @@ LinuC Level 1 と AWS CLF を取得したので、AWS を用いた Web サーバ
 - **学んだこと**:AWS の使い方、最小権限の考え方、Nginx の導入、ポートの開放、障害時の切り分け方と考え方
 
 ## 構成図
+
+![構成図](docs/images/architecture.svg)
+
+<details>
+<summary>通信の流れ(テキスト版)</summary>
 
 ```mermaid
 flowchart LR
@@ -31,6 +42,8 @@ flowchart LR
     nginx -- "リバースプロキシ<br>(SELinux:httpd_can_network_connect)" --> next
     certbot -. "HTTP-01 認証" .-> le
 ```
+
+</details>
 
 ## 使った技術
 
@@ -62,6 +75,15 @@ flowchart LR
   - SELinux は、プロセスがどのポートやファイルに触れてよいかを厳しく決めていて、許可されていない接続は止める
   - DuckDNS のサブドメインを使い、0 円で公開した
   - EPEL + certbot で通信を暗号化(HTTPS)し、証明書は自動更新
+- **Step 3:壊して直す訓練・まとめ(手元の VM)**
+  - 公開サーバーでは試さず、手元の VM でわざと障害を起こし、自力で切り分けて直した
+    - a. Nginx の停止:`systemctl status` で `inactive (dead)` → `journalctl` で止まった時刻を確認して起動
+    - b. firewalld で http が消えた:タイムアウト → `firewall-cmd --list-all` → `--permanent` で追加して `--reload`
+    - c. 設定ファイルの書き間違い:`nginx -t` で行番号まで特定して修正し、起動
+    - d. アプリのファイル権限:`journalctl -u` で `EACCES` → パーミッションを元に戻す
+    - e. SELinux の拒否:502 の直後に `ausearch` → boolean で許可
+  - 症状(タイムアウト / Connection refused / 502)で通信がどこまで届いているかを判断し、外側から順に切り分ける考え方を身につけた
+  - ゼロから EC2 で公開するまでの手順書([docs/runbooks/deploy.md](docs/runbooks/deploy.md))を作った
 
 ## なぜそうしたか
 
