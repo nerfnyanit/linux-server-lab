@@ -11,7 +11,8 @@
 LinuC Level 1 と AWS CLF を取得したので、AWS を用いた Web サーバーのポートフォリオを作成しました。
 
 - **目的**:一人で Linux サーバーを立て、Web サーバーとして公開できるようになるため
-- **公開先**:https://nerfnyanit-portfolio.duckdns.org(公開しているアプリ本体:[nerfnyanit/frontend-portfolio](https://github.com/nerfnyanit/frontend-portfolio))
+- **公開先**:<https://nerfnyanit-portfolio.duckdns.org>
+- **公開しているアプリ本体**:[nerfnyanit/frontend-portfolio](https://github.com/nerfnyanit/frontend-portfolio)
 - **期間**:9 日間(2026/10/22〜10/30)
 - **費用**:自己負担 0 円。AWS の利用料(EC2・EBS・パブリック IPv4 で月 約 $15)は発生しているが、AWS のクレジットで充当している。ドメインは DuckDNS の無料サブドメイン。2026/12/22(クレジットの期限)までにリソースを削除する予定
 - **費用管理**:最初にルートユーザーの MFA と予算アラート(AWS Budgets、月 $20)を設定してからリソースを作成。予算アラートはメールで通知するだけで、リソースを自動で止めるものではない
