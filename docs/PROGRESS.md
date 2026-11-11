@@ -37,7 +37,7 @@
 - [ ] (任意)fail2ban / dnf-automatic
 
 ## 終わったあと
-- [ ] 12/22より前にAWSリソースを削除(またはOracle Always Freeへ移行)
+- [ ] 12/22より前にAWSリソースを削除(またはOracle Always Freeへ移行)(11/11:EC2 を終了(EBS も削除)、Elastic IP を解放。スナップショット・AMI は無し。SG とキーペアは課金されないので残っている。DuckDNS の向き先の整理が残り)
 
 ## メモ
 - VM:VMnet8(NAT)のサブネット内で、DHCP の範囲外に固定 IP を設定、メモリ 2GB。再起動後も固定IPが残ることを確認済み

@@ -11,10 +11,10 @@
 LinuC Level 1 と AWS CLF を取得したので、AWS を用いた Web サーバーのポートフォリオを作成しました。
 
 - **目的**:一人で Linux サーバーを立て、Web サーバーとして公開できるようになるため
-- **公開先**:<https://nerfnyanit-portfolio.duckdns.org>
-- **公開しているアプリ本体**:[nerfnyanit/frontend-portfolio](https://github.com/nerfnyanit/frontend-portfolio)
+- **公開先**:`https://nerfnyanit-portfolio.duckdns.org`(**公開は終了しました**。2026/10/28〜11/11 に公開し、11/11 に AWS のリソースを削除した。公開していたときの動作は [evidence/](evidence/) の出力で確認できる)
+- **公開していたアプリ本体**:[nerfnyanit/frontend-portfolio](https://github.com/nerfnyanit/frontend-portfolio)
 - **期間**:9 日間(2026/10/22〜10/30)
-- **費用**:自己負担 0 円。AWS の利用料(EC2・EBS・パブリック IPv4 で月 約 $15)は発生しているが、AWS のクレジットで充当している。ドメインは DuckDNS の無料サブドメイン。2026/12/22(クレジットの期限)までにリソースを削除する予定
+- **費用**:自己負担 0 円。AWS の利用料(EC2・EBS・パブリック IPv4 で月 約 $15)は AWS のクレジットで充当した。ドメインは DuckDNS の無料サブドメイン。クレジットの期限(2026/12/22)より前の 11/11 に、EC2(EBS ごと)を終了し、Elastic IP を解放した
 - **費用管理**:最初にルートユーザーの MFA と予算アラート(AWS Budgets、月 $20)を設定してからリソースを作成。予算アラートはメールで通知するだけで、リソースを自動で止めるものではない
 - **学んだこと**:AWS の使い方、最小権限の考え方、Nginx の導入、ポートの開放、障害時の切り分け方と考え方
 
